@@ -3,6 +3,5 @@
 
 The code for the LED Music project.
 
-Makes the RGB LED strip lights light up depending
-on certain frequencies within the music at a
-particular timestep.
+Commands the RGB LED strip lights to change color depending
+on certain audio frequencies observed at a particular timestep.
