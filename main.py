@@ -6,10 +6,10 @@ import numpy as np
 from scipy.fftpack import fft
 import RPi.GPIO as GPIO
 
-CHUNK = 1024 * 2 # was 2
-FORMAT = pyaudio.paInt16 # was paInt18
+CHUNK = 1024 * 2
+FORMAT = pyaudio.paInt16
 CHANNELS = 1
-RATE = 44100 # was 44100
+RATE = 44100
 
 p = pyaudio.PyAudio()
 PinLowFreq = 27
@@ -53,16 +53,12 @@ pastFiveMicSamples = [0,0,0,0,0]
 i = 0
 x_fft = x_fft[:len(x_fft) // 2]
 while True:
-    # print("Hello")
     data = stream.read(CHUNK, exception_on_overflow = False)
     data_int = np.array(struct.unpack(str(2 * CHUNK) + "B", data), dtype='b')[::2] #+ 127
 
     y_fft = fft(data_int) # core algorithm 
     # was temp_fft = np.abs(y_fft[0:CHUNK]) * 2 / (256 * CHUNK)
     y_fft = np.abs(y_fft[0:CHUNK]) * 2 / (256 * CHUNK)
-    # print(len(y_fft))
-    #editedMagnitude = np.append(temp_fft[:70], temp_fft[-20000:])
-#    frequencies = np.append(x_fft[:70], x_fft[-20000:])
 
     y_fft = y_fft[:len(y_fft)//2]
     maxVolumeOccurances = np.count_nonzero(data_int >= maxVolume)
@@ -85,13 +81,9 @@ while True:
     
     frequencyIndexes = np.argsort(y_fft)    # will have the positions of the lowest to highest frequency
 
-#    print(frequencyIndexes)
-#    print(len(frequencyIndexes))
     low = 0
     mid = 0
     high = 0
- #   print(len(frequencyIndexes))
-    #credit = 100
     # now add up the fft values
     for j in range(int(len(x_fft)/8)):
         # now split the frequencies
@@ -105,9 +97,7 @@ while True:
     low = round(low, 5)
     mid = round(mid, 5)
     high = round(high, 5)
-    #print("low = " + str(low) + " mid = " + str(mid) + " high = " + str(high) + " Highest: " + str(x_fft[frequencyIndexes[-1]]))
     total = low + mid + high
-    #print(total)
     if total > 0:
         # get the percentage and make the percentage relative to the highest one
         lowPercentage = round((((low / total) * 100.0 * 1) ** 1), 2)
@@ -135,12 +125,9 @@ while True:
         elif highPercentage < lowPercentage and highPercentage < midPercentage:
             highPercentage = 0
         
-        #print(str(lowPercentage) + "%\t" + str(midPercentage) + "%\t" + str(highPrecentage) + "%")
 
         i = i + 1
-
 
         PWMControllerLow.ChangeDutyCycle(lowPercentage)
         PWMControllerMid.ChangeDutyCycle(midPercentage)
         PWMControllerHigh.ChangeDutyCycle(highPercentage)
-        #print("Low: " + str(round(lowPercentage, 2)) + "Mid: " + str(round(midPercentage, 2)) + "High: " + str(round(highPercentage, 2)))
